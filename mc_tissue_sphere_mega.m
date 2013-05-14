@@ -2,12 +2,10 @@
 %for measuring photons detected with sphere over tissue
 %used to calculate scattering losses as a function of optical properties
 
-% Last editted May 13, 2013 at 13:00 by Diana Glennie.
-
 %% MAIN PROGRAM
 function [] = mc_tissue_sphere_mega
-global g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo stotalbin
 
+params = struct;
 % seed the random number generator based on the current time
 %rng('shuffle'); %Works for new matlabs
 
@@ -21,24 +19,24 @@ disp(['The current simulation began at',num2str(clock)])
 % for each simulation,
 for currun = 1:nruns %first run starts at 1 (Sheet1)
             %disp(['Currently processing run #',num2str(currun)])
-    [g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo] = read_param(currun, file); %read in simulation parameters
-    
+
+    params = read_param(currun, file);
     stotalbin = zeros(10001,1);
     
     
     % for each group of one thousand photons,
-    for kftncount = 1:kftn
-        h = waitbar(0,['Currently working on Run ',num2str(currun),'/', num2str(nruns),', Group ', num2str(kftncount),'/',num2str(kftn)],'Name',file);
+    for kftncount = 1:params.kftn
+        h = waitbar(0,['Currently working on Run ',num2str(currun),'/', num2str(nruns),', Group ', num2str(kftncount),'/',num2str(params.kftn)],'Name',file);
         % for each photon,
         for ftncount = 1:1000
             waitbar(ftncount/1000)
 %              disp(ftncount)
-            [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini; % initialize photon, these are the per-photon parameters
+            [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params); % initialize photon, these are the per-photon parameters
             while ftnwt ~= 0
                 if tissuesphere == 1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params);
                 elseif tissuesphere == -1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params);
                 else
                     disp('Something has gone terribly wrong (tissuesphere =/ +/-1).')
                     ftnwt = 0;
@@ -54,8 +52,8 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                     %radius = sqrt(pos(1)^2 + pos(2)^2 + pos(3)^2)
                     %disp('Too far away')
                 end
-                %if nrus >= rusnum % too many scatters
-                %    [ftnwt,nrus] = rusrul(ftnwt,nrus);
+                %if nrus >= params.rusnum % too many scatters
+                %    [ftnwt,nrus] = rusrul(ftnwt,nrus,params);
                 %end
             end
         end
@@ -81,40 +79,38 @@ nruns = xlsread(file,'Sheet0');
 end
 
 %% Read in parameters for the current simulation
-function [g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo] = read_param(currun, file) % VERIFIED
+function params = read_param(currun, file) % VERIFIED
 
     str = num2str(currun);
     runloc = strcat('Sheet',str);
     [num_data, text_data] = xlsread(file,runloc);
     
-    g = num_data(1); % anisotropy parameter
-    g2 = 1- g^2;
-    nrel_at = num_data(2); % relative index of refraction (air to tissue)
-    nrel_ta = 1/nrel_at;
-    reflco = num_data(3); % reflection coefficient of sphere
-    rusnum = num_data(4); % # of scatters before Russian roulette
-    rusfrac = num_data(5); % survival fraction applied to successful roulettes
-    kftn = num_data(6); % number of groups of thousands of photons
-    israd = num_data(7); % radius of integrating sphere (mm)
-    portrad = num_data(8); % radius of detection port (mm)
-    midz = sqrt(israd^2-portrad^2);
-    coshalf = num_data(9); % cosine of the fiber half angle
-    surfrad = (sqrt(1-coshalf^2)/coshalf)*(israd + midz);
-    mua = num_data(10); % absorption coefficient (mm^-1)
-    musp = num_data(11); % reduced scatter coefficient (mm^-1)
-    mut = mua + musp/(1-g);
-    albedo = (mut-mua)/mut; % transport/scatter albedo
+    params.g = num_data(1); % anisotropy parameter
+    params.g2 = 1- params.g^2;
+    params.nrel_at = num_data(2); % relative index of refraction (air to tissue)
+    params.nrel_ta = 1/params.nrel_at;
+    params.reflco = num_data(3); % reflection coefficient of sphere
+    params.rusnum = num_data(4); % # of scatters before Russian roulette
+    params.rusfrac = num_data(5); % survival fraction applied to successful roulettes
+    params.kftn = num_data(6); % number of groups of thousands of photons
+    params.israd = num_data(7); % radius of integrating sphere (mm)
+    params.portrad = num_data(8); % radius of detection port (mm)
+    params.midz = sqrt(params.israd^2-params.portrad^2);
+    params.coshalf = num_data(9); % cosine of the fiber half angle
+    params.surfrad = (sqrt(1-params.coshalf^2)/params.coshalf)*(params.israd + params.midz);
+    params.mua = num_data(10); % absorption coefficient (mm^-1)
+    params.musp = num_data(11); % reduced scatter coefficient (mm^-1)
+    params.mut = params.mua + params.musp/(1-params.g);
+    params.albedo = (params.mut-params.mua)/params.mut; % transport/scatter albedo
     
 end
 
 %% Initialize photon
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini % VERIFIED
-global israd midz coshalf
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params) % VERIFIED
 
+pos = [params.israd 0 params.midz];
 
-pos = [israd 0 midz];
-
-costheta = coshalf + (1 - coshalf)*rand;
+costheta = params.coshalf + (1 - params.coshalf)*rand;
 sintheta = sqrt(1 - costheta^2);
 
 cp = 2;
@@ -139,12 +135,11 @@ stotal = 0;
 end
 
 %% Russian roulette
-function [ftnwt,nrus] = rusrul(ftnwt,nrus)
-global rusfract
+function [ftnwt,nrus] = rusrul(ftnwt, nrus, params)
 
-    if (rand <= rusfract)
+    if (rand <= params.rusfract)
         nrus = -10*nrus;
-        ftnwt = ftnwt/rusfrac;
+        ftnwt = ftnwt/params.rusfrac;
     else
         ftnwt = 0;
         disp('Roulette killed.')
@@ -153,11 +148,10 @@ global rusfract
 end
 
 %% Map how photon moves while in sphere
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin)
-global nrel_at nrel_ta reflco israd midz surfrad
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params)
 
     oldpos = pos;
-    pos = raytrace(pos, dir); % raytrace to new position on sphere
+    pos = raytrace(pos, dir, params); % raytrace to new position on sphere
     
     if pos(3) <= 0 % then have gone into tissue
         % backtrack to tissue surface
@@ -165,17 +159,17 @@ global nrel_at nrel_ta reflco israd midz surfrad
         pos = adjust_pos(pos, dir, pathlength);
         
         % at tissue surface, check to see if photon reflects or transmits:
-        bscwt = fresnel(nrel_at, dir);
+        bscwt = fresnel(params.nrel_at, dir);
         
         if rand <= bscwt % reflects off surface
             dir(3) = -dir(3);
         else % successfully transmits into tissue
-            dir = refract(nrel_ta, dir);
+            dir = refract(params.nrel_ta, dir);
             tissuesphere = -1;
         end
         
     else % photon is still in sphere
-        if (sqrt(oldpos(1)^2+oldpos(2)^2) < surfrad) && (abs(oldpos(3)) < 1) && (pos(3) > (midz + sqrt(israd^2 - 2.5^2)))
+        if (sqrt(oldpos(1)^2+oldpos(2)^2) < params.surfrad) && (abs(oldpos(3)) < 1) && (pos(3) > (params.midz + sqrt(params.israd^2 - 2.5^2)))
 %  disp('Photon scored')            
             if stotal <= 0
                 stotalbin(1) = stotalbin(1) + ftnwt;
@@ -188,21 +182,19 @@ global nrel_at nrel_ta reflco israd midz surfrad
             ftnwt = 0;
             
         else % is reflected off sphere wall
-            ftnwt = ftnwt*reflco; % adjust photon weight
-            dir = sphere_scat(pos); % sample for new direction vector
+            ftnwt = ftnwt*params.reflco; % adjust photon weight
+            dir = sphere_scat(pos, params); % sample for new direction vector
         end
     end
 
 end
 
 %% Calculates the pathlength and then position along the current direction vector to the next spot on the sphere wall
-function newpos = raytrace(pos, dir) % VERIFIED
-global israd midz
-    
+function newpos = raytrace(pos, dir, params) % VERIFIED
 
     a = 1;
-    b = 2*(pos(1)*dir(1) + pos(2)*dir(2) + (pos(3) - midz)*dir(3));
-    c = pos(1)^2 + pos(2)^2 + (pos(3) - midz)^2 - israd^2;
+    b = 2*(pos(1)*dir(1) + pos(2)*dir(2) + (pos(3) - params.midz)*dir(3));
+    c = pos(1)^2 + pos(2)^2 + (pos(3) - params.midz)^2 - params.israd^2;
     
     if (b^2-4*a*c) < 0
         pathlength = (-b)/(2*a);
@@ -251,14 +243,13 @@ function dir = refract(nrel, dir)
 end
 
 %% Scatter inside sphere
-function dir = sphere_scat(pos)
-global midz
+function dir = sphere_scat(pos, params)
 
     % point toward center of sphere
-    pathlength = sqrt(pos(1)^2 + pos(2)^2 + (midz-pos(3))^2);
+    pathlength = sqrt(pos(1)^2 + pos(2)^2 + (params.midz-pos(3))^2);
     dir(1) = -pos(1)/pathlength;
     dir(2) = -pos(2)/pathlength;
-    dir(3) = (midz-pos(3))/pathlength;
+    dir(3) = (params.midz-pos(3))/pathlength;
     
     % get sin & cos of azimuthal angle
     cp = 2;
@@ -297,10 +288,9 @@ global midz
 end
 
 %% Map how photon moves while in tissue
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin)
-global nrel_at nrel_ta reflco portrad mut albedo
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params)
 
-    pathlength = -log(rand)/mut; %sample pathlength
+    pathlength = -log(rand)/params.mut; %sample pathlength
     pos = adjust_pos(pos, dir, pathlength); %move to new position (adjust_pos)
     stotal = stotal + pathlength; % add scatter pathlength to total pathlength
     
@@ -308,28 +298,28 @@ global nrel_at nrel_ta reflco portrad mut albedo
         pathlength = -pos(3)/dir(3); % backtrack to surface
         pos = adjust_pos(pos, dir, pathlength);
         
-        if sqrt(pos(1)^2 + pos(2)^2) < portrad % then crossed inside port
+        if sqrt(pos(1)^2 + pos(2)^2) < params.portrad % then crossed inside port
             % reflect or refract
-            bscwt = fresnel(nrel_ta, dir);
+            bscwt = fresnel(params.nrel_ta, dir);
             
             if rand <= bscwt % reflects off back into tissue
                 dir(3) = -dir(3);
             else % successfully transmits into sphere
 %                 disp('Photon reentered sphere')
-                dir = refract(nrel_at, dir);
+                dir = refract(params.nrel_at, dir);
                 tissuesphere = 1;
             end
             
         else % crossed outside port
             % reflect or refract
-            nrel = nrel_ta;
-            bscwt = fresnel(nrel, dir);
+
+            bscwt = fresnel(params.nrel_ta, dir);
             
             if rand <= bscwt % reflects off back into tissue
                 dir(3) = -dir(3);
             else
                 if sqrt(pos(1)^2 + pos(2)^2) < 15 % refraction occurs within cube surface area
-                    ftnwt = ftnwt*reflco;
+                    ftnwt = ftnwt*params.reflco;
                     dir(3) = -dir(3);
                 else % refraction occurs outside cube, kill photon
                     ftnwt = 0;
@@ -337,16 +327,15 @@ global nrel_at nrel_ta reflco portrad mut albedo
             end
         end
     else % still in tissue
-        ftnwt = ftnwt*albedo; % adjust weight
-        dir = tis_scatter(dir); % sample new direction vector (tis_scatter)
+        ftnwt = ftnwt*params.albedo; % adjust weight
+        dir = tis_scatter(dir, params); % sample new direction vector (tis_scatter)
         nrus = nrus + 1; % increment nrus
     end
 
 end
 
 %% Sample for new scatter angle in tissue
-function dir = tis_scatter(dir)
-global g g2
+function dir = tis_scatter(dir, params)
 
     % get sin & cos of azimuthal angle
     cp = 2;
@@ -360,11 +349,11 @@ global g g2
     cosphi = p/cp;
     
     % get scatter angle from Henyey-Greenstein
-    p = 2*g*rand + 1 - g;
-    p = g2/p;
+    p = 2*params.g*rand + 1 - params.g;
+    p = params.g2/p;
     p = p^2;
     
-    costheta = (2 - g2 - p)/(2*g);
+    costheta = (2 - params.g2 - p)/(2*params.g);
     sintheta = sqrt(1 - costheta^2);
     
     % change direction
