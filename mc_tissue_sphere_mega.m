@@ -36,9 +36,9 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
             [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini; % initialize photon, these are the per-photon parameters
             while ftnwt ~= 0
                 if tissuesphere == 1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin);
                 elseif tissuesphere == -1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin);
                 else
                     disp('Something has gone terribly wrong (tissuesphere =/ +/-1).')
                     ftnwt = 0;
@@ -153,8 +153,8 @@ global rusfract
 end
 
 %% Map how photon moves while in sphere
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal)
-global nrel_at nrel_ta reflco israd midz surfrad stotalbin
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin)
+global nrel_at nrel_ta reflco israd midz surfrad
 
     oldpos = pos;
     pos = raytrace(pos, dir); % raytrace to new position on sphere
@@ -297,7 +297,7 @@ global midz
 end
 
 %% Map how photon moves while in tissue
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal)
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin)
 global nrel_at nrel_ta reflco portrad mut albedo
 
     pathlength = -log(rand)/mut; %sample pathlength
