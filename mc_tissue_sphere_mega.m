@@ -9,7 +9,10 @@ function [] = mc_tissue_sphere_mega
 global g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo stotal stotalbin
 
 % seed the random number generator based on the current time
-rng('shuffle');
+%rng('shuffle'); %Works for new matlabs
+
+stream = RandStream('mt19937ar','Seed',sum(100*clock));  %Needed for older matlabs
+RandStream.setDefaultStream(stream); %Needed for older matlabs
 
 disp(['The current simulation began at',num2str(clock)])
 % read XLSX file containing list of MC sims to run & related data
