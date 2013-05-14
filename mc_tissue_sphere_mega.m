@@ -12,13 +12,13 @@ params = struct;
 stream = RandStream('mt19937ar','Seed',sum(100*clock));  %Needed for older matlabs
 RandStream.setDefaultStream(stream); %Needed for older matlabs
 
-disp(['The current simulation began at',num2str(clock)])
 % read XLSX file containing list of MC sims to run & related data
 [file, nruns] = read_list_sims;
-
+disp(['Processing file ',file])
 % for each simulation,
+tic %Start timer for performance measurements
 for currun = 1:nruns %first run starts at 1 (Sheet1)
-            %disp(['Currently processing run #',num2str(currun)])
+
 
     params = read_param(currun, file);
     stotalbin = zeros(10001,1);
@@ -66,7 +66,7 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
     end
     
 end
-disp(['The current run was completed at',num2str(clock)])
+toc %Stop timer for performance measurements, output time
 end
 
 %% Read in location of data and number of simulations to run
