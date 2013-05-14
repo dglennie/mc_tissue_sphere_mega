@@ -19,19 +19,17 @@ disp(['Processing file ',file])
 tic %Start timer for performance measurements
 for currun = 1:nruns %first run starts at 1 (Sheet1)
 
-
-    params = read_param(currun, file);
-    stotalbin = zeros(10001,1);
+    params = read_param(currun, file); %Fill up parameter struct
+    stotalbin = zeros(10001,1); %Zero statistics for this run
     
-        h = waitbar(0,['Currently working on Run ',num2str(currun),'/', num2str(nruns)],'Name',file);
-
-        for ftncount = 1:1000*params.kftn
-            waitbar(ftncount/1000*params.kftn)
-%              disp(ftncount)
+        parfor ftncount = 1:1000*params.kftn
+        
+            local_stotalbin = zeros(10001,1); %Initialize statistics bin for *just* this photon
             [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params); % initialize photon, these are the per-photon parameters
+            
             while ftnwt ~= 0
                 if tissuesphere == 1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, local_stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, local_stotalbin, params);
                 elseif tissuesphere == -1
                     [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, params);
                 else
@@ -49,10 +47,12 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                     %radius = sqrt(pos(1)^2 + pos(2)^2 + pos(3)^2)
                     %disp('Too far away')
                 end
+                
                 %if nrus >= params.rusnum % too many scatters
                 %    [ftnwt,nrus] = rusrul(ftnwt,nrus,params);
                 %end
             end
+            stotalbin = stotalbin + local_stotalbin %Accumulate results into main statistics for run
         end
         
         str = num2str(currun);
