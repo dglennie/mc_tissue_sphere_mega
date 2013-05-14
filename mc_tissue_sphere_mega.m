@@ -6,7 +6,7 @@
 
 %% MAIN PROGRAM
 function [] = mc_tissue_sphere_mega
-global g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo stotal stotalbin
+global g g2 nrel_at nrel_ta reflco rusnum rusfrac kftn israd portrad midz coshalf surfrad mua musp mut albedo stotalbin
 
 % seed the random number generator based on the current time
 %rng('shuffle'); %Works for new matlabs
@@ -33,12 +33,12 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
         for ftncount = 1:1000
             waitbar(ftncount/1000)
 %              disp(ftncount)
-            [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini; % initialize photon
+            [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini; % initialize photon, these are the per-photon parameters
             while ftnwt ~= 0
                 if tissuesphere == 1
-                    [pos, dir, ftnwt, tissuesphere] = sphere(pos, dir, ftnwt, tissuesphere);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal);
                 elseif tissuesphere == -1
-                    [pos, dir, ftnwt, tissuesphere, nrus] = tissue(pos, dir, ftnwt, tissuesphere, nrus);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal);
                 else
                     disp('Something has gone terribly wrong (tissuesphere =/ +/-1).')
                     ftnwt = 0;
@@ -153,8 +153,8 @@ global rusfract
 end
 
 %% Map how photon moves while in sphere
-function [pos, dir, ftnwt, tissuesphere] = sphere(pos, dir, ftnwt, tissuesphere)
-global nrel_at nrel_ta reflco israd midz surfrad stotalbin stotal
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal)
+global nrel_at nrel_ta reflco israd midz surfrad stotalbin
 
     oldpos = pos;
     pos = raytrace(pos, dir); % raytrace to new position on sphere
@@ -297,8 +297,8 @@ global midz
 end
 
 %% Map how photon moves while in tissue
-function [pos, dir, ftnwt, tissuesphere, nrus] = tissue(pos, dir, ftnwt, tissuesphere, nrus)
-global nrel_at nrel_ta reflco portrad mut albedo stotal
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal)
+global nrel_at nrel_ta reflco portrad mut albedo
 
     pathlength = -log(rand)/mut; %sample pathlength
     pos = adjust_pos(pos, dir, pathlength); %move to new position (adjust_pos)
