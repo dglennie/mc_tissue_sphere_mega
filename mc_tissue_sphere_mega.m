@@ -4,7 +4,7 @@
 
 %% MAIN PROGRAM
 function [] = mc_tissue_sphere_mega
-
+set(0, 'DefaulttextInterpreter', 'none'); %Disable TeX Interpreter
 params = struct;
 % seed the random number generator based on the current time
 %rng('shuffle'); %Works for new matlabs
@@ -23,20 +23,17 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
     params = read_param(currun, file);
     stotalbin = zeros(10001,1);
     
-    
-    % for each group of one thousand photons,
-    for kftncount = 1:params.kftn
-        h = waitbar(0,['Currently working on Run ',num2str(currun),'/', num2str(nruns),', Group ', num2str(kftncount),'/',num2str(params.kftn)],'Name',file);
-        % for each photon,
-        for ftncount = 1:1000
-            waitbar(ftncount/1000)
+        h = waitbar(0,['Currently working on Run ',num2str(currun),'/', num2str(nruns)],'Name',file);
+
+        for ftncount = 1:1000*params.kftn
+            waitbar(ftncount/1000*params.kftn)
 %              disp(ftncount)
             [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params); % initialize photon, these are the per-photon parameters
             while ftnwt ~= 0
                 if tissuesphere == 1
                     [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params);
                 elseif tissuesphere == -1
-                    [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params);
+                    [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, params);
                 else
                     disp('Something has gone terribly wrong (tissuesphere =/ +/-1).')
                     ftnwt = 0;
@@ -61,9 +58,7 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
         str = num2str(currun);
         runloc = strcat('Sheet',str);
         xlswrite(file,stotalbin,runloc,'D1')% print detectwt to current run's sheet
-        
-        close(h)
-    end
+
     
 end
 toc %Stop timer for performance measurements, output time
@@ -288,7 +283,7 @@ function dir = sphere_scat(pos, params)
 end
 
 %% Map how photon moves while in tissue
-function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin, params)
+function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, params)
 
     pathlength = -log(rand)/params.mut; %sample pathlength
     pos = adjust_pos(pos, dir, pathlength); %move to new position (adjust_pos)
