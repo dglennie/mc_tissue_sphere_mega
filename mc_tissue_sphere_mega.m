@@ -61,7 +61,7 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
         str = num2str(currun);
         runloc = strcat('Sheet',str);
         xlswrite(file,stotalbin,runloc,'D1')% print detectwt to current run's sheet
-
+        parfor_progress(0); %Cleanup progress bar files
     
 end
 
