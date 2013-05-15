@@ -4,7 +4,7 @@
 
 %% MAIN PROGRAM
 function [] = mc_tissue_sphere_mega
-set(0, 'DefaulttextInterpreter', 'none'); %Disable TeX Interpreter
+
 params = struct;
 % seed the random number generator based on the current time
 %rng('shuffle'); %Works for new matlabs
@@ -16,12 +16,14 @@ RandStream.setDefaultStream(stream); %Needed for older matlabs
 [file, nruns] = read_list_sims;
 disp(['Processing file ',file])
 % for each simulation,
-tic %Start timer for performance measurements
+
 for currun = 1:nruns %first run starts at 1 (Sheet1)
 
     params = read_param(currun, file); %Fill up parameter struct
     stotalbin = zeros(10001,1); %Zero statistics for this run
-    
+    disp(['Currently processing run ', int2str(currun), '/', int2str(nruns), ' ', int2str(1000*params.kftn), ' Photons'])
+    parfor_progress(1000*params.kftn); %Terminal-based progress indicator
+    tic %Start timer for performance measurements
         parfor ftncount = 1:1000*params.kftn
         
             local_stotalbin = zeros(10001,1); %Initialize statistics bin for *just* this photon
@@ -53,15 +55,16 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                 %end
             end
             stotalbin = stotalbin + local_stotalbin %Accumulate results into main statistics for run
+            parfor_progress; %Update progress bar
         end
-        
+        toc %Stop timer for performance measurements, output time
         str = num2str(currun);
         runloc = strcat('Sheet',str);
         xlswrite(file,stotalbin,runloc,'D1')% print detectwt to current run's sheet
 
     
 end
-toc %Stop timer for performance measurements, output time
+
 end
 
 %% Read in location of data and number of simulations to run
