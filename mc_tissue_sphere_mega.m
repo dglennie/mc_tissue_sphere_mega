@@ -49,7 +49,7 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                 %    [ftnwt,nrus] = rusrul(ftnwt,nrus,params);
                 %end
             end
-            stotalbin = stotalbin + local_stotalbin %Accumulate results into main statistics for run
+            stotalbin = stotalbin + local_stotalbin; %Accumulate results into main statistics for run
             parfor_progress; %Update progress bar
         end
         toc %Stop timer for performance measurements, output time
