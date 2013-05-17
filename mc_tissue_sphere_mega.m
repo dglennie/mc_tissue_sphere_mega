@@ -22,8 +22,8 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
     params = read_param(currun, file); %Fill up parameter struct
     stotalbin = zeros(10001,1); %Zero statistics for this run
     disp(['Currently processing run ', int2str(currun), '/', int2str(nruns), ' ', int2str(1000*params.kftn), ' Photons'])
-    parfor_progress(1000*params.kftn); %Terminal-based progress indicator
     tic %Start timer for performance measurements
+    parfor_progress(1000*params.kftn); %Terminal-based progress indicator
         parfor ftncount = 1:1000*params.kftn
         
             local_stotalbin = zeros(10001,1); %Initialize statistics bin for *just* this photon
@@ -52,11 +52,12 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
             stotalbin = stotalbin + local_stotalbin; %Accumulate results into main statistics for run
             parfor_progress; %Update progress bar
         end
+        parfor_progress(0); %Cleanup progress bar files
         toc %Stop timer for performance measurements, output time
         str = num2str(currun);
         runloc = strcat('Sheet',str);
         xlswrite(file,stotalbin,runloc,'D1')% print detectwt to current run's sheet
-        parfor_progress(0); %Cleanup progress bar files
+ 
     
 end
 
