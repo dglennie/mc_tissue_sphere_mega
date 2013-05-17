@@ -29,7 +29,7 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
             local_stotalbin = zeros(10001,1); %Initialize statistics bin for *just* this photon
             [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params); % initialize photon, these are the per-photon parameters
             
-            while ftnwt ~= 0
+            while (ftnwt > 1e-16)
                 if tissuesphere == 1
                     [pos, dir, nrus, ftnwt, tissuesphere, stotal, local_stotalbin] = sphere(pos, dir, nrus, ftnwt, tissuesphere, stotal, local_stotalbin, params);
                 elseif tissuesphere == -1
@@ -38,11 +38,6 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                     disp('Something has gone terribly wrong (tissuesphere =/ +/-1).')
                     ftnwt = 0;
                 end
-
-               if ftnwt < 1e-16 % ftnwt too small
-                    ftnwt = 0;
-                    %disp('Too small')
-               end 
                 
                 if (pos(3) < 0) && (sqrt(pos(1)^2 + pos(2)^2 + pos(3)^2) >= 100) % too far away
                     ftnwt = 0;
