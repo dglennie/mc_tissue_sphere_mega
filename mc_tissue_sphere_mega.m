@@ -168,7 +168,8 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, 
             if stotal <= 0
                 stotalbin(1) = stotalbin(1) + ftnwt;
             elseif stotal > 1000
-                stotalbin(10001) = stotalbin(10001) + ftnwt;
+				ftnwt = 0;
+                %stotalbin(10001) = stotalbin(10001) + ftnwt;
             else
                 bin = ceil(stotal*10 + 1); % find bin
                 stotalbin(bin) = stotalbin(bin) + ftnwt; % add total pathlength of photon to bin
