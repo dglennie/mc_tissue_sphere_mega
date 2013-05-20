@@ -313,11 +313,28 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, 
             if rand <= bscwt % reflects off back into tissue
                 dir(3) = -dir(3);
             else
-                if sqrt(pos(1)^2 + pos(2)^2) < 15 % refraction occurs within cube surface area
+                if sqrt(pos(1)^2 + pos(2)^2) < 25 % refraction occurs within cube surface area
                     ftnwt = ftnwt*params.reflco;
+					costheta = -rand;
+					sintheta = sqrt(1-costheta^2);
+					
+					cp = 2;
+					while ((cp >= 1) || (cp == 0));
+						p = 2*rand - 1;
+						q = 2*rand - 1;
+						cp = q^2 + p^2;
+					end
+					cp = sqrt(cp);
+					sinphi = q/cp;
+					cosphi = p/cp;
+					
+					dir(1) = sintheta*cosphi;
+					dir(2) = sintheta*sinphi;
+					dir(3) = costheta;
+                    %dir(3) = -dir(3);
+                else % refraction occurs outside cube, reflect but modify weight by backscatter factor
                     dir(3) = -dir(3);
-                else % refraction occurs outside cube, kill photon
-                    ftnwt = 0;
+					ftnwt = ftnwt*bscwt;
                 end
             end
         end
