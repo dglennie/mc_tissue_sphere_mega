@@ -39,9 +39,9 @@ for currun = 1:nruns %first run starts at 1 (Sheet1)
                     ftnwt = 0;
                 end
                 
-                if (pos(3) < 0) && (sqrt(pos(1)^2 + pos(2)^2 + pos(3)^2) >= 100) % too far away
+                if (pos(3) < 0) && (norm(pos) >= 100) % too far away
                     ftnwt = 0;
-                    %radius = sqrt(pos(1)^2 + pos(2)^2 + pos(3)^2)
+                    %radius = norm(pos)
                     %disp('Too far away')
                 end
                 
@@ -276,8 +276,7 @@ function dir = sphere_scat(pos, params)
         dir(1) = dirtemp1;
         dir(2) = dirtemp2;
         
-        dnorm = sqrt(dir(1)^2+dir(2)^2+dir(3)^2);
-        dir = dir./dnorm;
+        dir = dir./norm(dir);
     end
 
 end
@@ -365,9 +364,7 @@ function dir = tis_scatter(dir, params)
         dir(1) = dirtemp1;
         dir(2) = dirtemp2;
         
-        dnorm = sqrt(dir(1)^2+dir(2)^2+dir(3)^2);
-        dir = dir./dnorm;
-        
+        dir = dir./norm(dir);
     end
     
 end
