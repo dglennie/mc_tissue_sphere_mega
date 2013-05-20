@@ -5,7 +5,7 @@
 %% MAIN PROGRAM
 function [] = mc_tissue_sphere_mega
 
-params = struct;
+params = struct; %Defines empty struct
 % seed the random number generator based on the current time
 %rng('shuffle'); %Works for new matlabs
 
@@ -89,9 +89,9 @@ function params = read_param(currun, file) % VERIFIED
     params.kftn = num_data(6); % number of groups of thousands of photons
     params.israd = num_data(7); % radius of integrating sphere (mm)
     params.portrad = num_data(8); % radius of detection port (mm)
-    params.midz = sqrt(params.israd^2-params.portrad^2);
+    params.midz = sqrt(params.israd^2-params.portrad^2); % height of center of sphere
     params.coshalf = num_data(9); % cosine of the fiber half angle
-    params.surfrad = (sqrt(1-params.coshalf^2)/params.coshalf)*(params.israd + params.midz);
+    params.surfrad = (sqrt(1-params.coshalf^2)/params.coshalf)*(params.israd + params.midz); % tissue surface "seen" by detector fiber
     params.mua = num_data(10); % absorption coefficient (mm^-1)
     params.musp = num_data(11); % reduced scatter coefficient (mm^-1)
     params.mut = params.mua + params.musp/(1-params.g);
