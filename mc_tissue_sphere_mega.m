@@ -106,15 +106,9 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params) % VERIFI
     costheta = params.coshalf + (1 - params.coshalf)*rand;
     sintheta = realsqrt(1 - costheta^2);
     
-    cp = 2;
-    while ((cp >= 1) || (cp == 0));
-        p = 2*rand - 1;
-        q = 2*rand - 1;
-        cp = q^2 + p^2;
-    end
-    cp = realsqrt(cp);
-    sinphi = q/cp;
-    cosphi = p/cp;
+    phi = 2*pi*rand;
+    sinphi = sin(phi);
+    cosphi = cos(phi);
     
     dir = [-costheta sintheta*sinphi sintheta*cosphi];
     
@@ -238,15 +232,9 @@ function dir = sphere_scat(pos, params)
     dir(3) = (params.midz-pos(3))/pathlength;
     
     % get sin & cos of azimuthal angle
-    cp = 2;
-    while ((cp >= 1) || (cp == 0));
-        p = 2*rand - 1;
-        q = 2*rand - 1;
-        cp = q^2 + p^2;
-    end
-    cp = realsqrt(cp);
-    sinphi = q/cp;
-    cosphi = p/cp;
+    phi = 2*pi*rand;
+    sinphi = sin(phi);
+    cosphi = cos(phi);
     
     % get sin & cos of scatter angle
     costheta = 0.99*rand + 0.01;
@@ -309,15 +297,9 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, 
                     costheta = -rand;
                     sintheta = realsqrt(1-costheta^2);
                     
-                    cp = 2;
-                    while ((cp >= 1) || (cp == 0));
-                        p = 2*rand - 1;
-                        q = 2*rand - 1;
-                        cp = q^2 + p^2;
-                    end
-                    cp = realsqrt(cp);
-                    sinphi = q/cp;
-                    cosphi = p/cp;
+                    phi = 2*pi*rand;
+                    sinphi = sin(phi);
+                    cosphi = cos(phi);
                     
                     dir(1) = sintheta*cosphi;
                     dir(2) = sintheta*sinphi;
@@ -341,15 +323,9 @@ end
 function dir = tis_scatter(dir, params)
     
     % get sin & cos of azimuthal angle
-    cp = 2;
-    while ((cp >= 1) || (cp == 0));
-        p = 2*rand - 1;
-        q = 2*rand - 1;
-        cp = q^2 + p^2;
-    end
-    cp = realsqrt(cp);
-    sinphi = q/cp;
-    cosphi = p/cp;
+    phi = 2*pi*rand;
+    sinphi = sin(phi);
+    cosphi = cos(phi);
     
     % get scatter angle from Henyey-Greenstein
     p = 2*params.g*rand + 1 - params.g;
