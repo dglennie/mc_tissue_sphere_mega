@@ -7,10 +7,10 @@ function [] = mc_tissue_sphere_mega
     
     params = struct; %Defines empty struct
     % seed the random number generator based on the current time
-    %rng('shuffle'); %Works for new matlabs
+    rng('shuffle'); %Works for new matlabs
     
-    stream = RandStream('mt19937ar','Seed',sum(100*clock));  %Needed for older matlabs
-    RandStream.setDefaultStream(stream); %Needed for older matlabs
+    %stream = RandStream('mt19937ar','Seed',sum(100*clock));  %Needed for older matlabs
+    %RandStream.setDefaultStream(stream); %Needed for older matlabs
     
     % read XLSX file containing list of MC sims to run & related data
     [file, nruns] = read_list_sims;
@@ -88,9 +88,9 @@ function params = read_param(currun, file) % VERIFIED
     params.kftn = num_data(6); % number of groups of thousands of photons
     params.israd = num_data(7); % radius of integrating sphere (mm)
     params.portrad = num_data(8); % radius of detection port (mm)
-    params.midz = sqrt(params.israd^2-params.portrad^2); % height of center of sphere
+    params.midz = realsqrt(params.israd^2-params.portrad^2); % height of center of sphere
     params.coshalf = num_data(9); % cosine of the fiber half angle
-    params.surfrad = (sqrt(1-params.coshalf^2)/params.coshalf)*(params.israd + params.midz); % tissue surface "seen" by detector fiber
+    params.surfrad = (realsqrt(1-params.coshalf^2)/params.coshalf)*(params.israd + params.midz); % tissue surface "seen" by detector fiber
     params.mua = num_data(10); % absorption coefficient (mm^-1)
     params.musp = num_data(11); % reduced scatter coefficient (mm^-1)
     params.mut = params.mua + params.musp/(1-params.g);
@@ -104,7 +104,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params) % VERIFI
     pos = [params.israd 0 params.midz];
     
     costheta = params.coshalf + (1 - params.coshalf)*rand;
-    sintheta = sqrt(1 - costheta^2);
+    sintheta = realsqrt(1 - costheta^2);
     
     cp = 2;
     while ((cp >= 1) || (cp == 0));
@@ -112,7 +112,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = ftnini(params) % VERIFI
         q = 2*rand - 1;
         cp = q^2 + p^2;
     end
-    cp = sqrt(cp);
+    cp = realsqrt(cp);
     sinphi = q/cp;
     cosphi = p/cp;
     
@@ -149,7 +149,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, 
     if pos(3) <= 0 % then have gone into tissue
         % backtrack to tissue surface
         pathlength = -pos(3)/dir(3);
-        pos = adjust_pos(pos, dir, pathlength);
+        pos = pos + pathlength*dir;
         
         % at tissue surface, check to see if photon reflects or transmits:
         bscwt = fresnel(params.nrel_at, dir);
@@ -162,7 +162,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, 
         end
         
     else % photon is still in sphere
-        if (sqrt(oldpos(1)^2+oldpos(2)^2) < params.surfrad) && (abs(oldpos(3)) < 0.1) && (pos(3) > (params.midz + sqrt(params.israd^2 - 2.5^2)))
+        if (realsqrt(oldpos(1)^2+oldpos(2)^2) < params.surfrad) && (abs(oldpos(3)) < 0.1) && (pos(3) > (params.midz + realsqrt(params.israd^2 - 2.5^2)))
             %  disp('Photon scored')
             if stotal <= 0
                 stotalbin(1) = stotalbin(1) + ftnwt;
@@ -193,18 +193,10 @@ function newpos = raytrace(pos, dir, params) % VERIFIED
     if (b^2-4*a*c) < 0
         pathlength = (-b)/(2*a);
     else
-        pathlength = (- b + sqrt(b^2 - 4*a*c))/(2*a);
+        pathlength = (- b + realsqrt(b^2 - 4*a*c))/(2*a);
     end
     
-    newpos = adjust_pos(pos, dir, pathlength);
-end
-
-%% Move from old position along direction vector for determined length to new position
-function newpos = adjust_pos(oldpos, dir, pathlength)
-    newpos(1) = oldpos(1) + pathlength*dir(1);
-    newpos(2) = oldpos(2) + pathlength*dir(2);
-    newpos(3) = oldpos(3) + pathlength*dir(3);
-    
+    newpos = pos + pathlength*dir;
 end
 
 %% Calculate the Fresnel reflection and transmission coefficients
@@ -218,7 +210,7 @@ function bscwt = fresnel(nrel, dir)
         if snrsq >= 1
             bscwt = 1;
         else
-            ns = sqrt(nrsq - snisq);
+            ns = realsqrt(nrsq - snisq);
             np = abs(nrsq*dir(3));
             rs = (abs(dir(3)) - ns)/(abs(dir(3)) + ns);
             rp = (ns - np)/(ns + np);
@@ -232,7 +224,7 @@ end
 function dir = refract(nrel, dir)
     dir(1) = nrel*dir(1);
     dir(2) = nrel*dir(2);
-    dir(3) = sqrt(1-nrel^2*(1-dir(3)^2))*(dir(3)/abs(dir(3)));
+    dir(3) = realsqrt(1-nrel^2*(1-dir(3)^2))*(dir(3)/abs(dir(3)));
     
 end
 
@@ -240,7 +232,7 @@ end
 function dir = sphere_scat(pos, params)
     
     % point toward center of sphere
-    pathlength = sqrt(pos(1)^2 + pos(2)^2 + (params.midz-pos(3))^2);
+    pathlength = realsqrt(pos(1)^2 + pos(2)^2 + (params.midz-pos(3))^2);
     dir(1) = -pos(1)/pathlength;
     dir(2) = -pos(2)/pathlength;
     dir(3) = (params.midz-pos(3))/pathlength;
@@ -252,14 +244,14 @@ function dir = sphere_scat(pos, params)
         q = 2*rand - 1;
         cp = q^2 + p^2;
     end
-    cp = sqrt(cp);
+    cp = realsqrt(cp);
     sinphi = q/cp;
     cosphi = p/cp;
     
     % get sin & cos of scatter angle
     costheta = 0.99*rand + 0.01;
     %costheta = 0.6173*rand + 0.38; % calculated for scatter angle of 67.5deg
-    sintheta = sqrt(1-costheta^2);
+    sintheta = realsqrt(1-costheta^2);
     
     % change direction
     if abs(dir(3)) > 0.999 % if theta = 0, then equations simplify (also prevents error if costheta > 1)
@@ -267,7 +259,7 @@ function dir = sphere_scat(pos, params)
         dir(2) = sintheta*sinphi;
         dir(3) = costheta*dir(3)/abs(dir(3));
     else
-        sinnorm = sqrt(1-dir(3)^2);
+        sinnorm = realsqrt(1-dir(3)^2);
         dirtemp1 = dir(1)*costheta + sintheta*(dir(1)*dir(3)*cosphi - dir(2)*sinphi)/sinnorm;
         dirtemp2 = dir(2)*costheta + sintheta*(dir(2)*dir(3)*cosphi - dir(1)*sinphi)/sinnorm;
         
@@ -284,15 +276,15 @@ end
 function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, ftnwt, tissuesphere, stotal, params)
     
     pathlength = -log(rand)/params.mut; %sample pathlength
-    pos = adjust_pos(pos, dir, pathlength); %move to new position (adjust_pos)
+    pos = pos + pathlength*dir; %move to new position
     stotal = stotal + pathlength; % add scatter pathlength to total pathlength
     
     if pos(3) > 0 % then photon crossed surface
         pathlength = -pos(3)/dir(3); % backtrack to surface
         stotal = stotal - pathlength; % correct pathlength by subtracting distance travelled in air
-        pos = adjust_pos(pos, dir, pathlength);
+        pos = pos + pathlength*dir;
         
-        if sqrt(pos(1)^2 + pos(2)^2) < params.portrad % then crossed inside port
+        if realsqrt(pos(1)^2 + pos(2)^2) < params.portrad % then crossed inside port
             % reflect or refract
             bscwt = fresnel(params.nrel_ta, dir);
             
@@ -312,10 +304,10 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, 
             if rand <= bscwt % reflects off back into tissue
                 dir(3) = -dir(3);
             else
-                if sqrt(pos(1)^2 + pos(2)^2) < 25 % refraction occurs within cube surface area
+                if realsqrt(pos(1)^2 + pos(2)^2) < 25 % refraction occurs within cube surface area
                     ftnwt = ftnwt*params.reflco;
                     costheta = -rand;
-                    sintheta = sqrt(1-costheta^2);
+                    sintheta = realsqrt(1-costheta^2);
                     
                     cp = 2;
                     while ((cp >= 1) || (cp == 0));
@@ -323,7 +315,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, 
                         q = 2*rand - 1;
                         cp = q^2 + p^2;
                     end
-                    cp = sqrt(cp);
+                    cp = realsqrt(cp);
                     sinphi = q/cp;
                     cosphi = p/cp;
                     
@@ -355,7 +347,7 @@ function dir = tis_scatter(dir, params)
         q = 2*rand - 1;
         cp = q^2 + p^2;
     end
-    cp = sqrt(cp);
+    cp = realsqrt(cp);
     sinphi = q/cp;
     cosphi = p/cp;
     
@@ -365,7 +357,7 @@ function dir = tis_scatter(dir, params)
     p = p^2;
     
     costheta = (2 - params.g2 - p)/(2*params.g);
-    sintheta = sqrt(1 - costheta^2);
+    sintheta = realsqrt(1 - costheta^2);
     
     % change direction
     if abs(dir(3)) > 0.999 % if theta = 0, then equations simplify (also prevents error if costheta > 1)
@@ -373,7 +365,7 @@ function dir = tis_scatter(dir, params)
         dir(2) = sintheta*sinphi;
         dir(3) = costheta*dir(3)/abs(dir(3));
     else
-        sinnorm = sqrt(1-dir(3)^2);
+        sinnorm = realsqrt(1-dir(3)^2);
         dirtemp1 = dir(1)*costheta + sintheta*(dir(1)*dir(3)*cosphi - dir(2)*sinphi)/sinnorm;
         dirtemp2 = dir(2)*costheta + sintheta*(dir(2)*dir(3)*cosphi - dir(1)*sinphi)/sinnorm;
         
