@@ -163,7 +163,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal, stotalbin] = sphere(pos, 
         end
         
     else % photon is still in sphere
-        if (sqrt(oldpos(1)^2+oldpos(2)^2) < params.surfrad) && (abs(oldpos(3)) < 1) && (pos(3) > (params.midz + sqrt(params.israd^2 - 2.5^2)))
+        if (sqrt(oldpos(1)^2+oldpos(2)^2) < params.surfrad) && (abs(oldpos(3)) < 0.1) && (pos(3) > (params.midz + sqrt(params.israd^2 - 2.5^2)))
 %  disp('Photon scored')            
             if stotal <= 0
                 stotalbin(1) = stotalbin(1) + ftnwt;
