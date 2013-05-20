@@ -219,7 +219,7 @@ function dir = refract(nrel, dir)
     dir(1) = nrel*dir(1);
     dir(2) = nrel*dir(2);
     dir(3) = realsqrt(1-nrel^2*(1-dir(3)^2))*(dir(3)/abs(dir(3)));
-    
+    dir = dir/norm(dir);
 end
 
 %% Scatter inside sphere
@@ -230,6 +230,7 @@ function dir = sphere_scat(pos, params)
     dir(1) = -pos(1)/pathlength;
     dir(2) = -pos(2)/pathlength;
     dir(3) = (params.midz-pos(3))/pathlength;
+    dir = dir/norm(dir);
     
     % get sin & cos of azimuthal angle
     phi = 2*pi*rand;
@@ -253,11 +254,9 @@ function dir = sphere_scat(pos, params)
         
         dir(3) = dir(3)*costheta - sinnorm*sintheta*cosphi;
         dir(1) = dirtemp1;
-        dir(2) = dirtemp2;
-        
-        dir = dir./norm(dir);
+        dir(2) = dirtemp2;   
     end
-    
+    dir = dir/norm(dir);
 end
 
 %% Map how photon moves while in tissue
@@ -349,7 +348,7 @@ function dir = tis_scatter(dir, params)
         dir(1) = dirtemp1;
         dir(2) = dirtemp2;
         
-        dir = dir./norm(dir);
+        
     end
-    
+    dir = dir/norm(dir);
 end
