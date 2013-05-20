@@ -290,6 +290,7 @@ function [pos, dir, nrus, ftnwt, tissuesphere, stotal] = tissue(pos, dir, nrus, 
     
     if pos(3) > 0 % then photon crossed surface
         pathlength = -pos(3)/dir(3); % backtrack to surface
+		stotal = stotal - pathlength % correct pathlength by subtracting distance travelled in air
         pos = adjust_pos(pos, dir, pathlength);
         
         if sqrt(pos(1)^2 + pos(2)^2) < params.portrad % then crossed inside port
