@@ -44,6 +44,10 @@ function [] = mc_tissue_sphere_mega
                     %radius = norm(pos)
                     %disp('Too far away')
                 end
+				
+				if stotal > 1000
+					ftnwt = 0; %too many scatters in tissue
+				end
                 
                 %if nrus >= params.rusnum % too many scatters
                 %    [ftnwt,nrus] = rusrul(ftnwt,nrus,params);
